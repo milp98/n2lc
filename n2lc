@@ -1,7 +1,4 @@
 #! /usr/bin/bash
-<<BLOCK
-写的烂不要怪我 [doge]
-BLOCK
 
 : "${CONFIGURATION_PATH:=./etc}"
 : "${CONFIGROOM_PATH:=./connect}"
@@ -22,11 +19,17 @@ function Main()
         local xc=0
     }
 
-    #载入语言
-    while read -r lang;do
-        language[${lang%%=*}]=${lang##*=}
-        [ "$DEBUG" == "1" ] && ((xc++))
-    done < "./lang/${LANG%%.*}.po"
+    #载入语言  
+    [ ! -f "./lang/${LANG%%.*}.po" ] && {
+        while read -r lang;do
+            language[${lang%%=*}]=${lang##*=}
+        done < "./lang/en_US.po"
+    } || {
+            while read -r lang;do
+                language[${lang%%=*}]=${lang##*=}
+                [ "$DEBUG" == "1" ] && ((xc++))
+            done < "./lang/${LANG%%.*}.po"
+    }
 
     #载入配置
     while read -r i;do 
@@ -88,6 +91,7 @@ function Approach_Edge()
             Input_State 0
             connect[ROOM]=${INPUT}
 
+            # room config
             [ -e "${CONFIGURATION_PATH}/${INPUT}.conf" ] && {
                 echo -e "${language[config_exist]} \n"
                 ${Fun_State[Now]}
@@ -127,26 +131,6 @@ function Approach_Edge()
             clear
 
             ${Fun_State[Now]}
-        ;;
-        Close_Link )
-            local Process Pid
-            
-            Pid=(${Process[@]})
-            Process=($(pidof "edge"))
-            Process=(${#Process[@]})
-
-            [ ${#Process[@]} == 0 ] && unset Process
-
-            case ${#tmp[0]} in
-                0 )
-                    REBACK="Associated program not found!\n"
-                ;;
-                * )
-                    Accessibility root
-                    $PERMISSION kill "${Pid[@]}"
-                    echo -e "${#Process[@]}Program Kill\n\n"
-                ;;
-            esac
         ;;
         Room_Quickly )
             local Edge_CheckRun
@@ -188,10 +172,17 @@ function Connect_Server()
 
         case $INPUT in
             0 ) connect[Node]=supernode.ntop.org     ;;
-            1 ) connect[Node]=mc.satsukirin.com  ;;
-            * ) connect[Node]=${INPUT%%:*}
-                connect[Port]=${INPUT##*:}       ;;
+            1 ) connect[Node]=mc.satsukirin.com      ;;
+            * ) 
+                connect[Node]=${INPUT%%:*}
+                connect[Port]=${INPUT##*:}           ;;
         esac
+    }
+
+    [[ -n ${connect[Port]} ]] && {
+        clear
+        REBACK="Port cannot be empty!\n"
+        Main_Edge_Menu
     }
 
     Edge_StartUp_Phase
@@ -199,7 +190,7 @@ function Connect_Server()
 
 function Edge_StartUp_Phase()
 {
-    local logtime
+    local logtime tmp
 
     echo -e "${language[netdetection]} ...\n"
 
@@ -210,10 +201,10 @@ function Edge_StartUp_Phase()
     }
 
     ! [ -e "log" ] && mkdir log
-    [ -z "${connect[Port]}" ] && connect[Port]=7654
     [ "${config[campus_network]%%,*}" == "true" ] && {
         [ "${config[campus_network]##*,}" == "udp" ] && run+=(-S1) || run+=(-S2)
     }
+    [ -z "${connect[Port]}" ] && connect[Port]=7654
     [ "${config[traffic_encryption]}" == "true" ] && run+=(-H)
     [ "${config[enable_broadcast]}" == "true" ] && run+=(-E)
     [ "${config[disable_upnp]}" == "true" ] && run+=(--no-port)
@@ -226,17 +217,20 @@ function Edge_StartUp_Phase()
     run+=("-I ${config[user_id]} ")
     run+=("-c ${connect[ROOM]} ")
     run+=("-l ${connect[Node]}:${connect[Port]}")
+
     logtime="${PWD}/log/$(date "+%Y%m%d-%H%M%S").log"
 
     Accessibility root
 
-    [ "${DEBUG}" == "1" ] && print "Debug Flag: ${run[*]}\n"
+    [ "${DEBUG}" == "1" ] && printf "Debug Flag: ${run[*]}\n"
     nohup ${PERMISSION} edge ${run[*]} &> ${logtime}
 
     case $? in
         0 )
-            local url="n2lc://$(echo "${connect[Node]}:${connect[Port]}#${connect[ROOM]}"|base64)"
-            local ip=$(ip -4 a show "${connect[NetName]}" | grep -oP "(?<=inet\s)\d+(\.\d+){3}")
+            local url ip
+
+            url="n2lc://$(echo "${connect[Node]}:${connect[Port]}#${connect[ROOM]}"|base64)"
+            ip=$(ip -4 a show "${connect[NetName]}" | grep -oP "(?<=inet\s)\d+(\.\d+){3}")
 
             REBACK="Room: ${connect[ROOM]}\nURL: ${url}\nIP: ${ip}\n"
 
@@ -279,7 +273,7 @@ function Relink_Edge()
 
             ip=$(ip -4 a show "${tmp:3}" | grep -oP "(?<=inet\s)\d+(\.\d+){3}")
             tmp=$(N2Network)cat "$f"|grep
-            REBACK="IP: ${ip}\n"
+            REBACK="${language[edgeStartOK3]}: ${ip}\n"
 
             unset ip f logtime tmp
             ${Fun_State[Now]}

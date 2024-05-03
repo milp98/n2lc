@@ -24,4 +24,4 @@ edgeStartOK3=分配IP:
 restartOK=分配IP:
 edgeStartfail=啟動失敗，使用者取消操作或檔案損壞!
 configselect=[OK]:連上了！\n存儲房間麼？[yes/no]
-menuT2='K' 关闭服务 | 'E' 退出 | 'C' 连接测试
+menuT2='E'&'exit' 退出 | 'C' 连接测试

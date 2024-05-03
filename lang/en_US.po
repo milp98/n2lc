@@ -24,4 +24,4 @@ edgeStartOK3=Assign address:
 restartOK=Assign address:
 edgeStartfail=Start failed, please check whether the file is damaged or missing!
 configselect=[OK]: Interaction with server successful\nDo you want to save the room? [yes/no]
-menuT2='K' close service | 'E' exit | 'C' connection test
+menuT2='E'&'exit' Exit | 'C' connection test

@@ -24,4 +24,4 @@ edgeStartOK3=分配地址:
 restartOK=分配地址:
 edgeStartfail=启动失败，请检查文件是否损坏或丢失!
 configselect=[OK]:与服务器交互成功\n是否保存该房间？[yes/no]
-menuT2='K' 关闭服务 | 'E' 退出 | 'C' 连接测试
+menuT2='E'&'exit' 退出 | 'C' 连接测试
